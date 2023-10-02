@@ -15,7 +15,7 @@ from albumentations import Compose
 import torch.nn as nn
 import torch.utils.data as Data
 import torch.utils.data.dataset as Dataset
-from mymodel import get_ResNet, RA_Net
+from mymodel import get_ResNet, RA_Net, myres
 from d2l import torch as d2l
 import csv
 import time
@@ -41,7 +41,8 @@ def seed_everything(seed=1234):
 
 def get_net(M):
     """获取神经网络，超参数M指的是在RAm中的pattern数"""
-    net = RA_Net(*get_ResNet(), M)
+    # net = RA_Net(*get_ResNet(), M)
+    net = myres(*get_ResNet())
     return net
 
 def sample_normalize(image, **kwargs):
@@ -294,20 +295,22 @@ def map_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, lr_
             optimizer.zero_grad()
 
             # prediction
-            y_hat, y_RA, P = net(image, False)
+            # y_hat, y_RA, P = net(image, False)
+            y_hat = net(image)
             y_hat = y_hat.squeeze()
 
             # compute loss
-            loss_BN = loss_fn_reg(y_hat, label)
-            loss_dis = torch.tensor([0], dtype=torch.float32, device=loss_BN.device)
-            for i in range(y_RA.shape[1]):
-                loss_dis += loss_fn_reg(y_RA[:, i], label)
-            loss_div = torch.tensor([0], dtype=torch.float32, device=loss_BN.device)
-            k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
-            for i in range(P.shape[1]):
-                loss_div += loss_fn_rec(P[:, i], k[:, i])
-            loss_RA = beta*loss_dis + gamma*loss_div
-            loss = alpha*loss_BN + lambd*loss_RA
+            loss = loss_fn_reg(y_hat, label)
+            # loss_BN = loss_fn_reg(y_hat, label)
+            # loss_dis = torch.tensor([0], dtype=torch.float32, device=loss_BN.device)
+            # for i in range(y_RA.shape[1]):
+            #     loss_dis += loss_fn_reg(y_RA[:, i], label)
+            # loss_div = torch.tensor([0], dtype=torch.float32, device=loss_BN.device)
+            # k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
+            # for i in range(P.shape[1]):
+            #     loss_div += loss_fn_rec(P[:, i], k[:, i])
+            # loss_RA = beta*loss_dis + gamma*loss_div
+            # loss = alpha*loss_BN + lambd*loss_RA
 
             # backward,calculate gradients，反馈计算梯度
             # 弃用罚函数
