@@ -59,7 +59,13 @@ class RA_Net(nn.Module):
         self.backbone = nn.Sequential(*backbone)
         self.RAm = RAm(output_channels, M)
         self.classifer = nn.Sequential(
-            nn.Linear(output_channels, 240),
+            nn.Linear(output_channels, 1024),
+            nn.BatchNorm1d(1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Linear(512, 240),
             nn.BatchNorm1d(240),
             nn.ReLU(),
             nn.Linear(240, 1)

@@ -255,8 +255,9 @@ def map_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, lr_
     loss_fn_rec = nn.CrossEntropyLoss(reduction="sum")
     loss_fn_reg = nn.L1Loss(reduction='sum')
 
-    # optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
-    optimizer = torch.optim.SGD(net.parameters(), lr=lr, weight_decay=wd)
+    optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
+    # optimizer = torch.optim.SGD(net.parameters(), lr=lr, weight_decay=wd)
+    # optimizer = torch.optim.SGD(net.parameters(), lr=lr)
     # 每过10轮，学习率降低一半
     scheduler = StepLR(optimizer, step_size=lr_period, gamma=lr_decay)
 
@@ -266,6 +267,7 @@ def map_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, lr_
     ## Trains
 
     for epoch in range(num_epochs):
+        net.fine_tune()
         net.train()
         print(epoch+1)
         this_record = []
@@ -297,15 +299,16 @@ def map_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, lr_
 
             # compute loss
             loss_BN = loss_fn_reg(y_hat, label)
-            loss_dis = torch.tensor([0], dtype=torch.float32, device=loss_BN.device)
-            for i in range(y_RA.shape[1]):
-                loss_dis += loss_fn_reg(y_RA[:, i], label)
-            loss_div = torch.tensor([0], dtype=torch.float32, device=loss_BN.device)
-            k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
-            for i in range(P.shape[1]):
-                loss_div += loss_fn_rec(P[:, i], k[:, i])
-            loss_RA = beta*loss_dis + gamma*loss_div
-            loss = alpha*loss_BN + lambd*loss_RA
+            # loss_dis = torch.tensor([0], dtype=torch.float32, device=loss_BN.device)
+            # for i in range(y_RA.shape[1]):
+            #     loss_dis += loss_fn_reg(y_RA[:, i], label)
+            # loss_div = torch.tensor([0], dtype=torch.float32, device=loss_BN.device)
+            # k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
+            # for i in range(P.shape[1]):
+            #     loss_div += loss_fn_rec(P[:, i], k[:, i])
+            # loss_RA = beta*loss_dis + gamma*loss_div
+            # loss = alpha*loss_BN + lambd*loss_RA
+            loss = loss_BN
 
             # backward,calculate gradients，反馈计算梯度
             # 弃用罚函数
@@ -365,6 +368,7 @@ def valid_fn(*, net, val_loader, devices):
             y_pred = y_pred * boneage_div + boneage_mean
             # y_pred_loss = y_pred.argmax(axis=1)
             y_pred = y_pred.squeeze()
+            print(f"y_pred is\n{y_pred}\nlabel is\n{label}")
 
             batch_loss = loss_fn(y_pred, label).item()
             mae_loss += batch_loss
