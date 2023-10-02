@@ -299,16 +299,15 @@ def map_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, lr_
 
             # compute loss
             loss_BN = loss_fn_reg(y_hat, label)
-            # loss_dis = torch.tensor([0], dtype=torch.float32, device=loss_BN.device)
-            # for i in range(y_RA.shape[1]):
-            #     loss_dis += loss_fn_reg(y_RA[:, i], label)
-            # loss_div = torch.tensor([0], dtype=torch.float32, device=loss_BN.device)
-            # k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
-            # for i in range(P.shape[1]):
-            #     loss_div += loss_fn_rec(P[:, i], k[:, i])
-            # loss_RA = beta*loss_dis + gamma*loss_div
-            # loss = alpha*loss_BN + lambd*loss_RA
-            loss = loss_BN
+            loss_dis = torch.tensor([0], dtype=torch.float32, device=loss_BN.device)
+            for i in range(y_RA.shape[1]):
+                loss_dis += loss_fn_reg(y_RA[:, i], label)
+            loss_div = torch.tensor([0], dtype=torch.float32, device=loss_BN.device)
+            k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
+            for i in range(P.shape[1]):
+                loss_div += loss_fn_rec(P[:, i], k[:, i])
+            loss_RA = beta*loss_dis + gamma*loss_div
+            loss = alpha*loss_BN + lambd*loss_RA
 
             # backward,calculate gradients，反馈计算梯度
             # 弃用罚函数

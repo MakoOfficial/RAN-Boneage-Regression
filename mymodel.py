@@ -65,10 +65,7 @@ class RA_Net(nn.Module):
             nn.Linear(1024, 512),
             nn.BatchNorm1d(512),
             nn.ReLU(),
-            nn.Linear(512, 240),
-            nn.BatchNorm1d(240),
-            nn.ReLU(),
-            nn.Linear(240, 1)
+            nn.Linear(512, 1)
         )
 
     def forward(self, image, ifTest):
