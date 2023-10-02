@@ -268,7 +268,7 @@ def map_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, lr_
     ## Trains
 
     for epoch in range(num_epochs):
-        net.fine_tune()
+        # net.fine_tune()
         net.train()
         print(epoch+1)
         this_record = []
