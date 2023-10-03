@@ -295,23 +295,29 @@ def map_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, lr_
             optimizer.zero_grad()
 
             # prediction
-            # y_hat, y_RA, P = net(image, False)
-            y_hat = net(image, True)
+            y_hat, y_RA, P = net(image, False)
+            # y_hat = net(image, True)
             # y_hat = net(image)
             y_hat = y_hat.squeeze()
 
             # compute loss
-            loss = loss_fn_reg(y_hat, label)
-            # loss_BN = loss_fn_reg(y_hat, label)
-            # loss_dis = torch.tensor([0], dtype=torch.float32, device=loss_BN.device)
+            # loss = loss_fn_reg(y_hat, label)
+            
+            loss_BN = loss_fn_reg(y_hat, label)
+            
+            # loss_dis = torch.tensor([0], device=loss_BN.device)
+            loss_dis = loss_fn_reg(y_RA[:, 0], label) + loss_fn_reg(y_RA[:, 1], label) + loss_fn_reg(y_RA[:, 2], label) + loss_fn_reg(y_RA[:, 3], label)
             # for i in range(y_RA.shape[1]):
             #     loss_dis += loss_fn_reg(y_RA[:, i], label)
-            # loss_div = torch.tensor([0], dtype=torch.float32, device=loss_BN.device)
-            # k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
+            
+            # loss_div = torch.tensor([0], device=loss_BN.device)
+            k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
+            loss_div = loss_fn_rec(P[:, 0], k[:, 0]) + loss_fn_rec(P[:, 1], k[:, 1]) + loss_fn_rec(P[:, 2], k[:, 2]) + loss_fn_rec(P[:, 3], k[:, 3])
             # for i in range(P.shape[1]):
             #     loss_div += loss_fn_rec(P[:, i], k[:, i])
-            # loss_RA = beta*loss_dis + gamma*loss_div
-            # loss = alpha*loss_BN + lambd*loss_RA
+                
+            loss_RA = beta*loss_dis + gamma*loss_div
+            loss = alpha*loss_BN + lambd*loss_RA
 
             # backward,calculate gradients，反馈计算梯度
             # 弃用罚函数
@@ -365,7 +371,7 @@ def valid_fn(*, net, val_loader, devices):
             label = data[1].type(torch.FloatTensor).to(devices[0])
 
             #   net内求出的是normalize后的数据，这里应该是是其还原，而不是直接net（）
-            y_pred = net(image, True)
+            y_pred, _, _ = net(image, True)
             # y_pred = net(image)
             y_pred = y_pred.cpu()
             label = label.cpu()
