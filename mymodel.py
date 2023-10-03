@@ -17,11 +17,29 @@ class RAm(nn.Module):
         super().__init__()
         self.M = M
         self.output_channels = output_channels
+        # self.attention_generate_layer = nn.Sequential(
+        #     nn.Conv2d(output_channels, M, kernel_size=1),
+        #     nn.ReLU()
+        # )
         self.attention_generate_layer = nn.Sequential(
-            nn.Conv2d(output_channels, M, kernel_size=1),
-            nn.ReLU()
+            nn.Conv2d(output_channels, 256, kernel_size=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.Conv2d(256, 16, kernel_size=1),
+            nn.BatchNorm2d(16),
+            nn.ReLU,
+            nn.Conv2d(16, M, kernel_size=1),
+            nn.Sigmoid()
         )
-        self.diversity = nn.Linear(output_channels, M)
+        self.diversity = nn.Sequential(
+            nn.Linear(output_channels, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU,
+            nn.Linear(256, 16),
+            nn.BatchNorm1d(16),
+            nn.ReLU(),
+            nn.Linear(16, 4)
+        )
         self.GAP = nn.AdaptiveAvgPool2d(1)
 
     def generate_vector(self, atten_map, feature_map):
@@ -33,6 +51,7 @@ class RAm(nn.Module):
         for i in range(self.M):
             # v[:,i] = self.generate_vector(attn_map[:, i].unsqueeze(dim=1), feature_map)
             v[:,i] = torch.squeeze(self.GAP(attn_map[:, i].unsqueeze(dim=1)*feature_map))
+        
         P = torch.zeros([feature_map.shape[0], self.M, self.M], device=v.device)
         for i in range(self.M):
             P[:, i] = self.diversity(v[:, i])
@@ -59,9 +78,10 @@ class RA_Net(nn.Module):
         )
 
     def forward(self, image, ifTest):
-        feature_map = self.backbone(image)
+        x = self.backbone(image)
+        feature_map = x
 
-        x = self.GAP(feature_map)
+        x = self.GAP(x)
         x = torch.squeeze(x)
         x = x.view(-1, self.output_channels)
         y_hat = self.classifer(x)
