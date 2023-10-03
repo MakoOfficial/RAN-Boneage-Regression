@@ -27,14 +27,14 @@ class RAm(nn.Module):
             nn.ReLU(),
             nn.Conv2d(256, 16, kernel_size=1),
             nn.BatchNorm2d(16),
-            nn.ReLU,
+            nn.ReLU(),
             nn.Conv2d(16, M, kernel_size=1),
             nn.Sigmoid()
         )
         self.diversity = nn.Sequential(
             nn.Linear(output_channels, 256),
             nn.BatchNorm1d(256),
-            nn.ReLU,
+            nn.ReLU(),
             nn.Linear(256, 16),
             nn.BatchNorm1d(16),
             nn.ReLU(),
