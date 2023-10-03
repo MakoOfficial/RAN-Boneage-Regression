@@ -364,7 +364,8 @@ def valid_fn(*, net, val_loader, devices):
             label = data[1].type(torch.FloatTensor).to(devices[0])
 
             #   net内求出的是normalize后的数据，这里应该是是其还原，而不是直接net（）
-            y_pred = net(image, True)
+            # y_pred = net(image, True)
+            y_pred = net(image)
             y_pred = y_pred.cpu()
             label = label.cpu()
             y_pred = y_pred * boneage_div + boneage_mean
