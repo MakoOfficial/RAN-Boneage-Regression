@@ -75,7 +75,7 @@ class RA_Net(nn.Module):
         x = torch.squeeze(x)
         x = x.view(-1, self.output_channels)
         y_hat = self.classifer(x)
-
+        # return y_hat, 0, 0
         if ifTest:
             return y_hat
 
@@ -99,7 +99,7 @@ class myres(nn.Module):
         # 注意点：resnet总共四个sequential，输出通道分别是256, 512, 1024, 2048，这也确定MMCA的输入通道，但经过四层后高宽除以32
         # ResNet的前五层分别为：线性层conv2d，bn，ReLU，maxpooling，和第一个sequential
         self.out_channels = out_channels
-        self.backbone = backbone
+        self.backbone = nn.Sequential(*backbone)
         # MMCA中的的降维因子的总乘积随着通道数的翻倍，也跟着翻倍，但为什么变成两个，或者为什么大的放后面，这就无从考究了
 
         # 2.21新增，在GA模块之前就对resnet+MMCA进行训练，所以这里就添加MLP层

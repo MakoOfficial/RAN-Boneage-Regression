@@ -41,8 +41,8 @@ def seed_everything(seed=1234):
 
 def get_net(M):
     """获取神经网络，超参数M指的是在RAm中的pattern数"""
-    # net = RA_Net(*get_ResNet(), M)
-    net = myres(*get_ResNet())
+    net = RA_Net(*get_ResNet(), M)
+    # net = myres(*get_ResNet())
     return net
 
 def sample_normalize(image, **kwargs):
@@ -296,7 +296,8 @@ def map_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, lr_
 
             # prediction
             # y_hat, y_RA, P = net(image, False)
-            y_hat = net(image)
+            y_hat = net(image, True)
+            # y_hat = net(image)
             y_hat = y_hat.squeeze()
 
             # compute loss
@@ -364,8 +365,8 @@ def valid_fn(*, net, val_loader, devices):
             label = data[1].type(torch.FloatTensor).to(devices[0])
 
             #   net内求出的是normalize后的数据，这里应该是是其还原，而不是直接net（）
-            # y_pred = net(image, True)
-            y_pred = net(image)
+            y_pred, _, _ = net(image, True)
+            # y_pred = net(image)
             y_pred = y_pred.cpu()
             label = label.cpu()
             y_pred = y_pred * boneage_div + boneage_mean
