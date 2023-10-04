@@ -315,7 +315,7 @@ def map_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, lr_
             loss_div = loss_fn_rec(P[:, 0], k[:, 0]) + loss_fn_rec(P[:, 1], k[:, 1]) + loss_fn_rec(P[:, 2], k[:, 2]) + loss_fn_rec(P[:, 3], k[:, 3])
             # for i in range(P.shape[1]):
             #     loss_div += loss_fn_rec(P[:, i], k[:, i])
-                
+            print(f"loss_BN is {loss_BN}, loss_dis is {loss_dis}, loss_div is :{loss_div}")
             loss_RA = beta*loss_dis + gamma*loss_div
             loss = alpha*loss_BN + lambd*loss_RA
 
