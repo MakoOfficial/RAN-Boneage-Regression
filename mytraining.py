@@ -11,10 +11,10 @@ if __name__ == '__main__':
     lr = 1e-3
     batch_size = 32
     # batch_size = 8
-    num_epochs = 50
+    num_epochs = 250
     weight_decay = 0.0001
-    lr_period = 10
-    lr_decay = 0.5
+    lr_period = 50
+    lr_decay = 0.1
     M = 4
     alpha = 1
     beta = 1
