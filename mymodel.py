@@ -107,19 +107,12 @@ class RA_Net(nn.Module):
 
         attn_map = self.attention_generate_layer(feature_map)
         # P, v = self.RAm(feature_map)
-        v1 = torch.squeeze(self.GAP(attn_map[:, 0]*feature_map))
-        v2 = torch.squeeze(self.GAP(attn_map[:, 1]*feature_map))
-        v3 = torch.squeeze(self.GAP(attn_map[:, 2]*feature_map))
-        v4 = torch.squeeze(self.GAP(attn_map[:, 3]*feature_map))
-
-
-        v1 = self.classifer(v1)
-        v2 = self.classifer(v2)
-        v3 = self.classifer(v3)
-        v4 = self.classifer(v4)
-        y_hat = self.classifer(x)
+        v1 = torch.squeeze(self.GAP(torch.unsqueeze(attn_map[:, 0], dim=1)*feature_map))
+        v2 = torch.squeeze(self.GAP(torch.unsqueeze(attn_map[:, 1], dim=1)*feature_map))
+        v3 = torch.squeeze(self.GAP(torch.unsqueeze(attn_map[:, 2], dim=1)*feature_map))
+        v4 = torch.squeeze(self.GAP(torch.unsqueeze(attn_map[:, 3], dim=1)*feature_map))
         
-        return y_hat, [self.diversity(v1), self.diversity(v2), self.diversity(v3), self.diversity(v4)], [v1, v2, v3, v4]
+        return self.classifer(x), [self.diversity(v1), self.diversity(v2), self.diversity(v3), self.diversity(v4)], [self.classifer(v1), self.classifer(v2), self.classifer(v3), self.classifer(v4)]
         # return y_hat, 0, v
 
     # 加入微调函数
