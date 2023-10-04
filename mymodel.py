@@ -17,46 +17,61 @@ class RAm(nn.Module):
         super().__init__()
         self.M = M
         self.output_channels = output_channels
-        # self.attention_generate_layer = nn.Sequential(
-        #     nn.Conv2d(output_channels, M, kernel_size=1),
-        #     nn.ReLU()
-        # )
         self.attention_generate_layer = nn.Sequential(
-            nn.Conv2d(output_channels, 256, kernel_size=1),
-            nn.BatchNorm2d(256),
-            nn.ReLU(),
-            nn.Conv2d(256, 16, kernel_size=1),
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-            nn.Conv2d(16, M, kernel_size=1),
+            nn.Conv2d(output_channels, M, kernel_size=1),
             nn.Sigmoid()
         )
+        # self.attention_generate_layer = nn.Sequential(
+        #     nn.Conv2d(output_channels, 256, kernel_size=1),
+        #     nn.BatchNorm2d(256),
+        #     nn.ReLU(),
+        #     nn.Conv2d(256, 16, kernel_size=1),
+        #     nn.BatchNorm2d(16),
+        #     nn.ReLU(),
+        #     nn.Conv2d(16, M, kernel_size=1), # M=4
+        #     nn.Sigmoid()
+        # )
+        # self.diversity = nn.Sequential(
+        #     nn.Linear(output_channels, 256),
+        #     nn.BatchNorm1d(256),
+        #     nn.ReLU(),
+        #     nn.Linear(256, 16),
+        #     nn.BatchNorm1d(16),
+        #     nn.ReLU(),
+        #     nn.Linear(16, 4)
+        # )
         self.diversity = nn.Sequential(
-            nn.Linear(output_channels, 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU(),
-            nn.Linear(256, 16),
-            nn.BatchNorm1d(16),
-            nn.ReLU(),
-            nn.Linear(16, 4)
+            nn.Linear(output_channels, M),
+            nn.Sigmoid()
         )
-        self.GAP = nn.AdaptiveAvgPool2d(1)
+        # self.GAP = nn.AdaptiveAvgPool2d(1)
 
     def generate_vector(self, atten_map, feature_map):
         return torch.squeeze(F.adaptive_avg_pool2d(atten_map*feature_map, 1))
 
     def forward(self, feature_map):
         attn_map = self.attention_generate_layer(feature_map)
-        v = torch.zeros([attn_map.shape[0], self.M, self.output_channels], device=attn_map.device)
-        for i in range(self.M):
-            # v[:,i] = self.generate_vector(attn_map[:, i].unsqueeze(dim=1), feature_map)
-            v[:,i] = torch.squeeze(self.GAP(attn_map[:, i].unsqueeze(dim=1)*feature_map))
-        
-        P = torch.zeros([feature_map.shape[0], self.M, self.M], device=v.device)
-        for i in range(self.M):
-            P[:, i] = self.diversity(v[:, i])
 
-        return P, v
+        v1 = self.generate_vector(attn_map[:, 1].unsqueeze(dim=1)*feature_map)
+        v2 = self.generate_vector(attn_map[:, 2].unsqueeze(dim=1)*feature_map)
+        v3 = self.generate_vector(attn_map[:, 3].unsqueeze(dim=1)*feature_map)
+        v4 = self.generate_vector(attn_map[:, 4].unsqueeze(dim=1)*feature_map)
+
+        P1 = self.diversity(v1)
+        P2 = self.diversity(v2)
+        P3 = self.diversity(v3)
+        P4 = self.diversity(v4)
+        # v = torch.zeros([attn_map.shape[0], self.M, self.output_channels], device=attn_map.device)
+        # for i in range(self.M):
+            # v[:,i] = self.generate_vector(attn_map[:, i].unsqueeze(dim=1), feature_map)
+        #     v[:,i] = torch.squeeze(self.GAP(attn_map[:, i].unsqueeze(dim=1)*feature_map))
+        
+        # P = torch.zeros([feature_map.shape[0], self.M, self.M], device=v.device)
+        # for i in range(self.M):
+        #     P[:, i] = self.diversity(v[:, i])
+
+        # return P, v
+        return [P1, P2, P3, P4], [v1, v2, v3, v4]
 
 class RA_Net(nn.Module):
     "Rich Attention Net"
@@ -64,7 +79,7 @@ class RA_Net(nn.Module):
         super().__init__()
         self.output_channels = output_channels
         self.M = M
-        self.backbone = nn.Sequential(*backbone)
+        self.backbone = nn.Sequential(*backbone) # ResNet 50
         self.RAm = RAm(output_channels, M)
         self.GAP = nn.AdaptiveAvgPool2d(1)
         self.classifer = nn.Sequential(
@@ -77,23 +92,30 @@ class RA_Net(nn.Module):
             nn.Linear(512, 1)
         )
 
-    def forward(self, image, ifTest):
+    # def forward(self, image, ifTest):
+    def forward(self, image):
         x = self.backbone(image)
         feature_map = x
+        # attn_map = self.attn_generation(x)
 
         x = self.GAP(x)
         x = torch.squeeze(x)
         x = x.view(-1, self.output_channels)
-        y_hat = self.classifer(x)
+        # y_hat = self.classifer(x)
         # return y_hat, 0, 0
         # if ifTest:
         #     return y_hat
 
         P, v = self.RAm(feature_map)
-        y_RA = torch.zeros([v.shape[0], self.M], device=v.device)
+
         for i in range(self.M):
-            y_RA[:, i] = torch.squeeze(self.classifer(v[:, i]))
-        return y_hat, y_RA, P
+            v[i] = self.classifer(v[i])
+        y_hat = self.classifer(x)
+        # for i in range(self.M):
+        #     y_RA[:, i] = torch.squeeze(self.classifer(v[:, i]))
+
+        # return y_hat, y_RA, P
+        return y_hat, P, v
 
     # 加入微调函数
     def fine_tune(self, need_fine_tune = True):

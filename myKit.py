@@ -295,29 +295,39 @@ def map_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, lr_
             optimizer.zero_grad()
 
             # prediction
-            y_hat, y_RA, P = net(image, False)
+            # y_hat, y_RA, P = net(image, False)    # 10.4 before
+
+            y_hat, P, v = net(image)    
             # y_hat = net(image, True)
             # y_hat = net(image)
             y_hat = y_hat.squeeze()
 
             # compute loss
-            # loss = loss_fn_reg(y_hat, label)
-            
-            loss_BN = loss_fn_reg(y_hat, label)
+            loss = loss_fn_reg(y_hat, label)
+            loss_BN = loss    
+            # loss_BN = loss_fn_reg(y_hat, label)    # 10.4 before
             
             # loss_dis = torch.tensor([0], device=loss_BN.device)
-            loss_dis = loss_fn_reg(y_RA[:, 0], label) + loss_fn_reg(y_RA[:, 1], label) + loss_fn_reg(y_RA[:, 2], label) + loss_fn_reg(y_RA[:, 3], label)
+            # loss_dis = loss_fn_reg(y_RA[:, 0], label) + loss_fn_reg(y_RA[:, 1], label) + loss_fn_reg(y_RA[:, 2], label) + loss_fn_reg(y_RA[:, 3], label)     # 10.4 before
             # for i in range(y_RA.shape[1]):
             #     loss_dis += loss_fn_reg(y_RA[:, i], label)
-            
+            loss_dis = 0
+            for i in range(len(v)):
+                loss += loss_fn_reg(v[i], label)
+                loss_dis += loss_fn_reg(v[i], label)
+
             # loss_div = torch.tensor([0], device=loss_BN.device)
             k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
-            loss_div = loss_fn_rec(P[:, 0], k[:, 0]) + loss_fn_rec(P[:, 1], k[:, 1]) + loss_fn_rec(P[:, 2], k[:, 2]) + loss_fn_rec(P[:, 3], k[:, 3])
+            # loss_div = loss_fn_rec(P[:, 0], k[:, 0]) + loss_fn_rec(P[:, 1], k[:, 1]) + loss_fn_rec(P[:, 2], k[:, 2]) + loss_fn_rec(P[:, 3], k[:, 3])      # 10.4 before
+            loss_div = 0
+            for i in range(len(P)):
+                loss += loss_fn_rec(P[i], k[:, i])
+                loss_div += loss_fn_rec(P[i], k[:, i])
             # for i in range(P.shape[1]):
             #     loss_div += loss_fn_rec(P[:, i], k[:, i])
-            print(f"loss_BN is {loss_BN}, loss_dis is {loss_dis}, loss_div is :{loss_div}")
-            loss_RA = beta*loss_dis + gamma*loss_div
-            loss = alpha*loss_BN + lambd*loss_RA
+            print(f"\nloss_BN is {loss_BN}, loss_dis is {loss_dis}, loss_div is :{loss_div}")
+            # loss_RA = beta*loss_dis + gamma*loss_div
+            # loss = alpha*loss_BN + lambd*loss_RA
 
             # backward,calculate gradients，反馈计算梯度
             # 弃用罚函数
