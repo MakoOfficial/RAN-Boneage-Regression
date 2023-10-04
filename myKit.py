@@ -285,7 +285,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, l
             # prediction
             # y_hat, P, v = net(image)
             y_hat = net(image)
-            y_hat = y_hat.squeeze()
+            y_hat = torch.squeeze(y_hat)
 
             # compute loss
             # loss_BN = loss_fn_reg(y_hat, label)
@@ -300,6 +300,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, l
             # loss = alpha*loss_BN + lambd*loss_RA
             
             # backward,calculate gradients
+            print(f"loss'grad:{loss.grad}")
             loss.backward()
             
             # print(f"\nloss_BN'grad:{loss_BN.grad}, loss_dis'grad {loss_dis.grad}, loss_div'grad :{loss_div.grad}")

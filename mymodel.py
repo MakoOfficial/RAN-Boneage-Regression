@@ -52,15 +52,11 @@ class RAm(nn.Module):
     def forward(self, feature_map):
         attn_map = self.attention_generate_layer(feature_map)
 
-        v1 = self.generate_vector(attn_map[:, 0].unsqueeze(dim=1), feature_map)
-        v2 = self.generate_vector(attn_map[:, 1].unsqueeze(dim=1), feature_map)
-        v3 = self.generate_vector(attn_map[:, 2].unsqueeze(dim=1), feature_map)
-        v4 = self.generate_vector(attn_map[:, 3].unsqueeze(dim=1), feature_map)
+        v1 = self.generate_vector(torch.unsqueeze(attn_map[:, 0], dim=1), feature_map)
+        v2 = self.generate_vector(torch.unsqueeze(attn_map[:, 0], dim=1), feature_map)
+        v3 = self.generate_vector(torch.unsqueeze(attn_map[:, 0], dim=1), feature_map)
+        v4 = self.generate_vector(torch.unsqueeze(attn_map[:, 0], dim=1), feature_map)
 
-        P1 = self.diversity(v1)
-        P2 = self.diversity(v2)
-        P3 = self.diversity(v3)
-        P4 = self.diversity(v4)
         # v = torch.zeros([attn_map.shape[0], self.M, self.output_channels], device=attn_map.device)
         # for i in range(self.M):
             # v[:,i] = self.generate_vector(attn_map[:, i].unsqueeze(dim=1), feature_map)
@@ -71,7 +67,7 @@ class RAm(nn.Module):
         #     P[:, i] = self.diversity(v[:, i])
 
         # return P, v
-        return [P1, P2, P3, P4], [v1, v2, v3, v4]
+        return [self.diversity(v1), self.diversity(v2), self.diversity(v3), self.diversity(v4)], [v1, v2, v3, v4]
 
 class RA_Net(nn.Module):
     "Rich Attention Net"
@@ -104,8 +100,10 @@ class RA_Net(nn.Module):
 
         P, v = self.RAm(feature_map)
 
-        for i in range(self.M):
-            v[i] = self.classifer(v[i])
+        v[0] = self.classifer(v[0])
+        v[1] = self.classifer(v[1])
+        v[2] = self.classifer(v[2])
+        v[3] = self.classifer(v[3])
         y_hat = self.classifer(x)
         
         return y_hat, P, v
