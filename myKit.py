@@ -249,8 +249,8 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, l
     loss_fn_rec = nn.CrossEntropyLoss(reduction="sum")
     loss_fn_reg = nn.L1Loss(reduction='sum')
 
-    optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
-    # optimizer = torch.optim.SGD(net.parameters(), lr=lr, weight_decay=wd)
+    # optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
+    optimizer = torch.optim.SGD(net.parameters(), lr=lr, weight_decay=wd, momentum=0.9)
 
     scheduler = StepLR(optimizer, step_size=lr_period, gamma=lr_decay)
 
