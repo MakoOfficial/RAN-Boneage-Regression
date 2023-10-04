@@ -309,8 +309,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, l
             k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
             loss_div = loss_fn_rec(P[0], k[:, 0]) + loss_fn_rec(P[1], k[:, 1]) + loss_fn_rec(P[2], k[:, 2]) + loss_fn_rec(P[3], k[:, 3])      # 10.4 before
             
-            loss_RA = beta*loss_dis + gamma*loss_div
-            loss = alpha*loss_BN + lambd*loss_RA
+            loss = alpha*loss_BN + beta*loss_dis + gamma*loss_div
             # loss = loss_BN + loss_dis
             
             # backward,calculate gradients

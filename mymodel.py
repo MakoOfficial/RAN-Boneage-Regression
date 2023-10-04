@@ -77,7 +77,14 @@ class RA_Net(nn.Module):
         self.output_channels = output_channels
         self.M = M
         self.backbone = nn.Sequential(*backbone) # ResNet 50
-        self.RAm = RAm(output_channels, M)
+        self.attention_generate_layer = nn.Sequential(
+            nn.Conv2d(output_channels, M, kernel_size=1),
+            nn.Sigmoid()
+        )
+        self.diversity = nn.Sequential(
+            nn.Linear(output_channels, M),
+            nn.Sigmoid()
+        )
         self.GAP = nn.AdaptiveAvgPool2d(1)
         self.classifer = nn.Sequential(
             nn.Linear(output_channels, 1024),
@@ -93,22 +100,26 @@ class RA_Net(nn.Module):
     def forward(self, image):
         x = self.backbone(image)
         feature_map = x
-        # attn_map = self.attn_generation(x)
-
+        
         x = self.GAP(x)
         x = torch.squeeze(x)
         x = x.view(-1, self.output_channels)
 
-        P, v = self.RAm(feature_map)
-        # v = self.RAm(feature_map)
+        attn_map = self.attention_generate_layer(feature_map)
+        # P, v = self.RAm(feature_map)
+        v1 = torch.squeeze(self.GAP(attn_map[:, 0]*feature_map))
+        v2 = torch.squeeze(self.GAP(attn_map[:, 1]*feature_map))
+        v3 = torch.squeeze(self.GAP(attn_map[:, 2]*feature_map))
+        v4 = torch.squeeze(self.GAP(attn_map[:, 3]*feature_map))
 
-        v[0] = self.classifer(v[0])
-        v[1] = self.classifer(v[1])
-        v[2] = self.classifer(v[2])
-        v[3] = self.classifer(v[3])
+
+        v1 = self.classifer(v1)
+        v2 = self.classifer(v2)
+        v3 = self.classifer(v3)
+        v4 = self.classifer(v4)
         y_hat = self.classifer(x)
         
-        return y_hat, P, v
+        return y_hat, [self.diversity(v1), self.diversity(v2), self.diversity(v3), self.diversity(v4)], [v1, v2, v3, v4]
         # return y_hat, 0, v
 
     # 加入微调函数
