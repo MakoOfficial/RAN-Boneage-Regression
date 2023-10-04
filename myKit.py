@@ -295,48 +295,27 @@ def map_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, lr_
             optimizer.zero_grad()
 
             # prediction
-            # y_hat, y_RA, P = net(image, False)    # 10.4 before
-
             y_hat, P, v = net(image)    
-            # y_hat = net(image, True)
-            # y_hat = net(image)
             y_hat = y_hat.squeeze()
 
             # compute loss
-            loss = loss_fn_reg(y_hat, label)
-            loss_BN = loss.detach().item()
-            # loss_BN = loss_fn_reg(y_hat, label)    # 10.4 before
+            loss_BN = loss_fn_reg(y_hat, label)
             
-            # loss_dis = torch.tensor([0], device=loss_BN.device)
-            # loss_dis = loss_fn_reg(y_RA[:, 0], label) + loss_fn_reg(y_RA[:, 1], label) + loss_fn_reg(y_RA[:, 2], label) + loss_fn_reg(y_RA[:, 3], label)     # 10.4 before
-            # for i in range(y_RA.shape[1]):
-            #     loss_dis += loss_fn_reg(y_RA[:, i], label)
-            loss_dis = 0
-            for i in range(len(v)):
-                loss += loss_fn_reg(v[i].squeeze(), label)
-                loss_dis += loss_fn_reg(v[i].squeeze(), label)
-
-            # loss_div = torch.tensor([0], device=loss_BN.device)
+            loss_dis = loss_fn_reg(v[0].squeeze(), label) + loss_fn_reg(v[1].squeeze(), label) + loss_fn_reg(v[2].squeeze(), label) + loss_fn_reg(v[3].squeeze(), label)
+            
             k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
-            # loss_div = loss_fn_rec(P[:, 0], k[:, 0]) + loss_fn_rec(P[:, 1], k[:, 1]) + loss_fn_rec(P[:, 2], k[:, 2]) + loss_fn_rec(P[:, 3], k[:, 3])      # 10.4 before
-            loss_div = 0
-            for i in range(len(P)):
-                loss += loss_fn_rec(P[i], k[:, i])
-                loss_div += loss_fn_rec(P[i], k[:, i])
-            # for i in range(P.shape[1]):
-            #     loss_div += loss_fn_rec(P[:, i], k[:, i])
-            print(f"\nloss_BN is {loss_BN/batch_size}, loss_dis is {loss_dis/(batch_size*4)}, loss_div is :{loss_div/batch_size}")
-            # loss_RA = beta*loss_dis + gamma*loss_div
-            # loss = alpha*loss_BN + lambd*loss_RA
-
+            loss_div = loss_fn_rec(P[0], k[:, 0]) + loss_fn_rec(P[1], k[:, 1]) + loss_fn_rec(P[2], k[:, 2]) + loss_fn_rec(P[3], k[:, 3])      # 10.4 before
+            
+            loss_RA = beta*loss_dis + gamma*loss_div
+            loss = alpha*loss_BN + lambd*loss_RA
+            
             # backward,calculate gradients，反馈计算梯度
-            # 弃用罚函数
-#             total_loss = loss + L1_penalty(net, 1e-5)
-#             total_loss.backward() 
             loss.backward()
+            
+            print(f"\nloss_BN'grad:{loss_BN.grad}, loss_dis'grad {loss_dis.grad}, loss_div'grad :{loss_div.grad}")
+            print(f"loss'grad:{loss.grad}")
+            
             # backward,update parameter，更新参数
-            # 6_3 增大batchsize，若累计8个batch_size更新梯度，或者batch为最后一个batch
-            # if (batch_idx + 1) % 8 == 0 or batch_idx == 377 :
             optimizer.step()
 
             batch_loss = loss.item()

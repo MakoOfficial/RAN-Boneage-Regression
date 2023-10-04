@@ -101,20 +101,13 @@ class RA_Net(nn.Module):
         x = self.GAP(x)
         x = torch.squeeze(x)
         x = x.view(-1, self.output_channels)
-        # y_hat = self.classifer(x)
-        # return y_hat, 0, 0
-        # if ifTest:
-        #     return y_hat
 
         P, v = self.RAm(feature_map)
 
         for i in range(self.M):
             v[i] = self.classifer(v[i])
         y_hat = self.classifer(x)
-        # for i in range(self.M):
-        #     y_RA[:, i] = torch.squeeze(self.classifer(v[:, i]))
-
-        # return y_hat, y_RA, P
+        
         return y_hat, P, v
 
     # 加入微调函数
