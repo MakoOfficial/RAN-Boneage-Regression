@@ -31,8 +31,8 @@ if __name__ == '__main__':
     male_train_set, male_val_set = myKit.create_data_loader(male_train_df, male_valid_df)
     female_train_set, female_val_set = myKit.create_data_loader(female_train_df, female_valid_df)
     torch.set_default_tensor_type('torch.FloatTensor')
-    myKit.map_fn(net=male_net, train_dataset=male_train_set, valid_dataset=male_val_set, num_epochs=num_epochs, lr=lr, wd=weight_decay, lr_period=lr_period, lr_decay=lr_decay, alpha=alpha, beta=beta, gamma=gamma, lambd=lambd, batch_size=batch_size, 
+    myKit.train_fn(net=male_net, train_dataset=male_train_set, valid_dataset=male_val_set, num_epochs=num_epochs, lr=lr, wd=weight_decay, lr_period=lr_period, lr_decay=lr_decay, alpha=alpha, beta=beta, gamma=gamma, lambd=lambd, batch_size=batch_size, 
                  model_path="model_RA_male.pth", record_path="RECORD_RA_male.csv")
-    myKit.map_fn(net=female_net, train_dataset=female_train_set, valid_dataset=female_val_set, num_epochs=num_epochs, lr=lr, wd=weight_decay, lr_period=lr_period, lr_decay=lr_decay, alpha=alpha, beta=beta, gamma=gamma, lambd=lambd, batch_size=batch_size, 
+    myKit.train_fn(net=female_net, train_dataset=female_train_set, valid_dataset=female_val_set, num_epochs=num_epochs, lr=lr, wd=weight_decay, lr_period=lr_period, lr_decay=lr_decay, alpha=alpha, beta=beta, gamma=gamma, lambd=lambd, batch_size=batch_size, 
                  model_path="model_RA_female.pth", record_path="RECORD_RA_female.csv")
 
