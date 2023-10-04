@@ -41,8 +41,8 @@ def seed_everything(seed=1234):
 
 def get_net(M):
     """obtain the net"""
-    # net = RA_Net(*get_ResNet(), M)
-    net = myres(*get_ResNet())
+    net = RA_Net(*get_ResNet(), M)
+    # net = myres(*get_ResNet())
     return net
 
 def sample_normalize(image, **kwargs):
@@ -257,6 +257,14 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, l
     seed=101
     torch.manual_seed(seed)  
 
+    module_name =  ["RAm.attention_generate_layer.0.weight",
+    "RAm.diversity.0.weight",
+    "classifer.0.weight",
+    "classifer.1.weight",
+    "classifer.3.weight",
+    "classifer.4.weight",
+    "classifer.6.weight"]
+
     ## Trains
 
     for epoch in range(num_epochs):
@@ -283,38 +291,40 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, l
             optimizer.zero_grad()
 
             # prediction
-            # y_hat, P, v = net(image)
-            y_hat = net(image)
+            y_hat, P, v = net(image)
+            # y_hat = net(image)
             y_hat = torch.squeeze(y_hat)
 
             # compute loss
-            # loss_BN = loss_fn_reg(y_hat, label)
-            loss = loss_fn_reg(y_hat, label)
+            loss_BN = loss_fn_reg(y_hat, label)
+            # loss = loss_fn_reg(y_hat, label)
             
-            # loss_dis = loss_fn_reg(v[0].squeeze(), label) + loss_fn_reg(v[1].squeeze(), label) + loss_fn_reg(v[2].squeeze(), label) + loss_fn_reg(v[3].squeeze(), label)
+            loss_dis = loss_fn_reg(torch.squeeze(v[0]), label) + loss_fn_reg(torch.squeeze(v[1]), label) + loss_fn_reg(torch.squeeze(v[2]), label) + loss_fn_reg(torch.squeeze(v[3]), label)
             
-            # k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
-            # loss_div = loss_fn_rec(P[0], k[:, 0]) + loss_fn_rec(P[1], k[:, 1]) + loss_fn_rec(P[2], k[:, 2]) + loss_fn_rec(P[3], k[:, 3])      # 10.4 before
+            k = torch.tensor([0, 1, 2, 3], device=image.device, requires_grad=True).repeat(batch_size, 1)
+            loss_div = loss_fn_rec(P[0], k[:, 0]) + loss_fn_rec(P[1], k[:, 1]) + loss_fn_rec(P[2], k[:, 2]) + loss_fn_rec(P[3], k[:, 3])      # 10.4 before
             
-            # loss_RA = beta*loss_dis + gamma*loss_div
-            # loss = alpha*loss_BN + lambd*loss_RA
+            loss_RA = beta*loss_dis + gamma*loss_div
+            loss = alpha*loss_BN + lambd*loss_RA
             
             # backward,calculate gradients
             for name, parms in net.named_parameters():	
-                print('-->name:', name)
-                print('-->para:', parms)
-                print('-->grad_requirs:',parms.requires_grad)
-                print('-->grad_value:',parms.grad)
-                print("===")
+                if name in module_name:
+                    print('-->name:', name)
+                    print('-->para:', parms)
+                    print('-->grad_requirs:',parms.requires_grad)
+                    print('-->grad_value:',parms.grad)
+                    print("===")
             loss.backward()
             print("=========================更新后=============================")
             for name, parms in net.named_parameters():	
-                print('-->name:', name)
-                print('-->para:', parms)
-                print('-->grad_requirs:',parms.requires_grad)
-                print('-->grad_value:',parms.grad)
-                print("===")
-            
+                if name in module_name:
+                    print('-->name:', name)
+                    print('-->para:', parms)
+                    print('-->grad_requirs:',parms.requires_grad)
+                    print('-->grad_value:',parms.grad)
+                    print("===")
+
             # print(f"\nloss_BN'grad:{loss_BN.grad}, loss_dis'grad {loss_dis.grad}, loss_div'grad :{loss_div.grad}")
             print(f"loss'grad:{loss.grad}")
             
