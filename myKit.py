@@ -41,8 +41,8 @@ def seed_everything(seed=1234):
 
 def get_net(M):
     """obtain the net"""
-    net = RA_Net(*get_ResNet(), M)
-    # net = myres(*get_ResNet())
+    # net = RA_Net(*get_ResNet(), M)
+    net = myres(*get_ResNet())
     return net
 
 def sample_normalize(image, **kwargs):
@@ -283,24 +283,26 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, l
             optimizer.zero_grad()
 
             # prediction
-            y_hat, P, v = net(image)    
+            # y_hat, P, v = net(image)
+            y_hat = net(image)
             y_hat = y_hat.squeeze()
 
             # compute loss
-            loss_BN = loss_fn_reg(y_hat, label)
+            # loss_BN = loss_fn_reg(y_hat, label)
+            loss = loss_fn_reg(y_hat, label)
             
-            loss_dis = loss_fn_reg(v[0].squeeze(), label) + loss_fn_reg(v[1].squeeze(), label) + loss_fn_reg(v[2].squeeze(), label) + loss_fn_reg(v[3].squeeze(), label)
+            # loss_dis = loss_fn_reg(v[0].squeeze(), label) + loss_fn_reg(v[1].squeeze(), label) + loss_fn_reg(v[2].squeeze(), label) + loss_fn_reg(v[3].squeeze(), label)
             
-            k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
-            loss_div = loss_fn_rec(P[0], k[:, 0]) + loss_fn_rec(P[1], k[:, 1]) + loss_fn_rec(P[2], k[:, 2]) + loss_fn_rec(P[3], k[:, 3])      # 10.4 before
+            # k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
+            # loss_div = loss_fn_rec(P[0], k[:, 0]) + loss_fn_rec(P[1], k[:, 1]) + loss_fn_rec(P[2], k[:, 2]) + loss_fn_rec(P[3], k[:, 3])      # 10.4 before
             
-            loss_RA = beta*loss_dis + gamma*loss_div
-            loss = alpha*loss_BN + lambd*loss_RA
+            # loss_RA = beta*loss_dis + gamma*loss_div
+            # loss = alpha*loss_BN + lambd*loss_RA
             
             # backward,calculate gradients
             loss.backward()
             
-            print(f"\nloss_BN'grad:{loss_BN.grad}, loss_dis'grad {loss_dis.grad}, loss_div'grad :{loss_div.grad}")
+            # print(f"\nloss_BN'grad:{loss_BN.grad}, loss_dis'grad {loss_dis.grad}, loss_div'grad :{loss_div.grad}")
             print(f"loss'grad:{loss.grad}")
             
             # backward,update parameter
@@ -347,8 +349,8 @@ def valid_fn(*, net, val_loader, devices):
             label = data[1].type(torch.FloatTensor).to(devices[0])
 
             # y_pred, _, _ = net(image, True)
-            y_pred, _, _ = net(image)
-            # y_pred = net(image)
+            # y_pred, _, _ = net(image)
+            y_pred = net(image)
             y_pred = y_pred.cpu()
             label = label.cpu()
             y_pred = y_pred * boneage_div + boneage_mean
@@ -391,7 +393,8 @@ if __name__ == '__main__':
     # bone_dir = os.path.join('..', 'data', 'archive', 'testDataset')
     bone_dir = "../archive"
     csv_name = "boneage-training-dataset.csv"
-    train_df, valid_df = split_data(bone_dir, csv_name, 20, 0.1, 8)
-    train_set, val_set = create_data_loader(train_df, valid_df)
+    # train_df, valid_df = split_data(bone_dir, csv_name, 20, 0.1, 8)
+    male_train_df, male_valid_df, female_train_df, female_valid_df = split_data(bone_dir, csv_name, 20, 0.1, 8)
+    train_set, val_set = create_data_loader(male_train_df, male_valid_df)
     torch.set_default_tensor_type('torch.FloatTensor')
     train_fn(net=net, train_dataset=train_set, valid_dataset=val_set, num_epochs=num_epochs, lr=lr, wd=weight_decay, lr_period=lr_period, lr_decay=lr_decay, alpha=alpha, beta=beta, gamma=gamma, lambd=lambd, batch_size=batch_size, model_path="model_res.pth", record_path="RECORD_res.csv")
