@@ -304,7 +304,7 @@ def map_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, lr_
 
             # compute loss
             loss = loss_fn_reg(y_hat, label)
-            loss_BN = loss    
+            loss_BN = loss.detach().item()
             # loss_BN = loss_fn_reg(y_hat, label)    # 10.4 before
             
             # loss_dis = torch.tensor([0], device=loss_BN.device)
@@ -313,8 +313,8 @@ def map_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, lr_
             #     loss_dis += loss_fn_reg(y_RA[:, i], label)
             loss_dis = 0
             for i in range(len(v)):
-                loss += loss_fn_reg(v[i], label)
-                loss_dis += loss_fn_reg(v[i], label)
+                loss += loss_fn_reg(v[i].squeeze(), label)
+                loss_dis += loss_fn_reg(v[i].squeeze(), label)
 
             # loss_div = torch.tensor([0], device=loss_BN.device)
             k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
@@ -325,7 +325,7 @@ def map_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, lr_
                 loss_div += loss_fn_rec(P[i], k[:, i])
             # for i in range(P.shape[1]):
             #     loss_div += loss_fn_rec(P[:, i], k[:, i])
-            print(f"\nloss_BN is {loss_BN}, loss_dis is {loss_dis}, loss_div is :{loss_div}")
+            print(f"\nloss_BN is {loss_BN/batch_size}, loss_dis is {loss_dis/(batch_size*4)}, loss_div is :{loss_div/batch_size}")
             # loss_RA = beta*loss_dis + gamma*loss_div
             # loss = alpha*loss_BN + lambd*loss_RA
 
@@ -381,7 +381,8 @@ def valid_fn(*, net, val_loader, devices):
             label = data[1].type(torch.FloatTensor).to(devices[0])
 
             #   net内求出的是normalize后的数据，这里应该是是其还原，而不是直接net（）
-            y_pred, _, _ = net(image, True)
+            # y_pred, _, _ = net(image, True)
+            y_pred, _, _ = net(image)
             # y_pred = net(image)
             y_pred = y_pred.cpu()
             label = label.cpu()

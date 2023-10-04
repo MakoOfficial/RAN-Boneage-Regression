@@ -52,10 +52,10 @@ class RAm(nn.Module):
     def forward(self, feature_map):
         attn_map = self.attention_generate_layer(feature_map)
 
-        v1 = self.generate_vector(attn_map[:, 1].unsqueeze(dim=1)*feature_map)
-        v2 = self.generate_vector(attn_map[:, 2].unsqueeze(dim=1)*feature_map)
-        v3 = self.generate_vector(attn_map[:, 3].unsqueeze(dim=1)*feature_map)
-        v4 = self.generate_vector(attn_map[:, 4].unsqueeze(dim=1)*feature_map)
+        v1 = self.generate_vector(attn_map[:, 0].unsqueeze(dim=1), feature_map)
+        v2 = self.generate_vector(attn_map[:, 1].unsqueeze(dim=1), feature_map)
+        v3 = self.generate_vector(attn_map[:, 2].unsqueeze(dim=1), feature_map)
+        v4 = self.generate_vector(attn_map[:, 3].unsqueeze(dim=1), feature_map)
 
         P1 = self.diversity(v1)
         P2 = self.diversity(v2)
