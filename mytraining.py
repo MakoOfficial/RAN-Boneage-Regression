@@ -8,7 +8,7 @@ warnings.filterwarnings("ignore")
 
 if __name__ == '__main__':
 
-    lr = 5e-4
+    lr = 1e-3
     batch_size = 32
     # batch_size = 8
     num_epochs = 50

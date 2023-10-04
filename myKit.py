@@ -257,14 +257,18 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, l
     seed=101
     torch.manual_seed(seed)  
 
-    module_name =  ["RAm.attention_generate_layer.0.weight",
-    "RAm.diversity.0.weight",
-    "classifer.0.weight",
-    "classifer.1.weight",
-    "classifer.3.weight",
-    "classifer.4.weight",
-    "classifer.6.weight"]
+    # module_name =  ["module.RAm.attention_generate_layer.0.weight",
+    # "module.RAm.diversity.0.weight",
+    # "module.classifer.0.weight",
+    # "module.classifer.1.weight",
+    # "module.classifer.3.weight",
+    # "module.classifer.4.weight",
+    # "module.classifer.6.weight"]
+    
+    module_name =  [
+    "module.RAm.diversity.0.weight"]
 
+    
     ## Trains
 
     for epoch in range(num_epochs):
@@ -301,32 +305,32 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, l
             
             loss_dis = loss_fn_reg(torch.squeeze(v[0]), label) + loss_fn_reg(torch.squeeze(v[1]), label) + loss_fn_reg(torch.squeeze(v[2]), label) + loss_fn_reg(torch.squeeze(v[3]), label)
             
-            k = torch.tensor([0, 1, 2, 3], device=image.device, requires_grad=True).repeat(batch_size, 1)
-            loss_div = loss_fn_rec(P[0], k[:, 0]) + loss_fn_rec(P[1], k[:, 1]) + loss_fn_rec(P[2], k[:, 2]) + loss_fn_rec(P[3], k[:, 3])      # 10.4 before
+            # k = torch.tensor([0, 1, 2, 3], dtype=image.dtype, device=image.device, requires_grad=True).repeat(batch_size, 1)
+            # k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
+            # loss_div = loss_fn_rec(P[0], k[:, 0]) + loss_fn_rec(P[1], k[:, 1]) + loss_fn_rec(P[2], k[:, 2]) + loss_fn_rec(P[3], k[:, 3])      # 10.4 before
             
-            loss_RA = beta*loss_dis + gamma*loss_div
-            loss = alpha*loss_BN + lambd*loss_RA
+            # loss_RA = beta*loss_dis + gamma*loss_div
+            # loss = alpha*loss_BN + lambd*loss_RA
+            loss = loss_BN + loss_dis
             
             # backward,calculate gradients
-            for name, parms in net.named_parameters():	
-                if name in module_name:
-                    print('-->name:', name)
-                    print('-->para:', parms)
-                    print('-->grad_requirs:',parms.requires_grad)
-                    print('-->grad_value:',parms.grad)
-                    print("===")
+            # for name, parms in net.named_parameters():
+            #     if name in module_name:
+            #         print('-->name:', name)
+            #         # print('-->para:', parms)
+            #         print('-->grad_requirs:',parms.requires_grad)
+            #         print('-->grad_value:',parms.grad)
             loss.backward()
             print("=========================更新后=============================")
-            for name, parms in net.named_parameters():	
+            for name, parms in net.named_parameters():
                 if name in module_name:
                     print('-->name:', name)
                     print('-->para:', parms)
                     print('-->grad_requirs:',parms.requires_grad)
                     print('-->grad_value:',parms.grad)
-                    print("===")
-
-            # print(f"\nloss_BN'grad:{loss_BN.grad}, loss_dis'grad {loss_dis.grad}, loss_div'grad :{loss_div.grad}")
-            print(f"loss'grad:{loss.grad}")
+                    
+            # print(f"\nloss_BN:{loss_BN.detach().item()/batch_size}, loss_dis'grad {loss_dis.detach().item()/(4*batch_size)}, loss_div'grad :{loss_div.detach().item()/batch_size}")
+            print(f"\nloss_BN:{loss_BN.detach().item()/batch_size}, loss_dis'grad {loss_dis.detach().item()/(4*batch_size)}")
             
             # backward,update parameter
             optimizer.step()
@@ -372,14 +376,14 @@ def valid_fn(*, net, val_loader, devices):
             label = data[1].type(torch.FloatTensor).to(devices[0])
 
             # y_pred, _, _ = net(image, True)
-            # y_pred, _, _ = net(image)
-            y_pred = net(image)
+            y_pred, _, _ = net(image)
+            # y_pred = net(image)
             y_pred = y_pred.cpu()
             label = label.cpu()
             y_pred = y_pred * boneage_div + boneage_mean
             # y_pred_loss = y_pred.argmax(axis=1)
             y_pred = y_pred.squeeze()
-            print(f"y_pred is\n{y_pred}\nlabel is\n{label}")
+            print(f"y_pred is\n{torch.round(y_pred)}\nlabel is\n{label}")
 
             batch_loss = loss_fn(y_pred, label).item()
             mae_loss += batch_loss

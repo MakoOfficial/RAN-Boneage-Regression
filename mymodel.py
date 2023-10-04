@@ -40,10 +40,10 @@ class RAm(nn.Module):
         #     nn.ReLU(),
         #     nn.Linear(16, 4)
         # )
-        self.diversity = nn.Sequential(
-            nn.Linear(output_channels, M),
-            nn.Sigmoid()
-        )
+        # self.diversity = nn.Sequential(
+        #     nn.Linear(output_channels, M),
+        #     nn.Sigmoid()
+        # )
         # self.GAP = nn.AdaptiveAvgPool2d(1)
 
     def generate_vector(self, atten_map, feature_map):
@@ -67,7 +67,8 @@ class RAm(nn.Module):
         #     P[:, i] = self.diversity(v[:, i])
 
         # return P, v
-        return [self.diversity(v1), self.diversity(v2), self.diversity(v3), self.diversity(v4)], [v1, v2, v3, v4]
+        # return [self.diversity(v1), self.diversity(v2), self.diversity(v3), self.diversity(v4)], [v1, v2, v3, v4]
+        return [v1, v2, v3, v4]
 
 class RA_Net(nn.Module):
     "Rich Attention Net"
@@ -98,7 +99,8 @@ class RA_Net(nn.Module):
         x = torch.squeeze(x)
         x = x.view(-1, self.output_channels)
 
-        P, v = self.RAm(feature_map)
+        # P, v = self.RAm(feature_map)
+        v = self.RAm(feature_map)
 
         v[0] = self.classifer(v[0])
         v[1] = self.classifer(v[1])
@@ -106,7 +108,8 @@ class RA_Net(nn.Module):
         v[3] = self.classifer(v[3])
         y_hat = self.classifer(x)
         
-        return y_hat, P, v
+        # return y_hat, P, v
+        return y_hat, 0, v
 
     # 加入微调函数
     def fine_tune(self, need_fine_tune = True):
