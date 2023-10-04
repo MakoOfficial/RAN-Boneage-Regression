@@ -300,15 +300,27 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, l
             # loss = alpha*loss_BN + lambd*loss_RA
             
             # backward,calculate gradients
-            print(f"loss'grad:{loss.grad}")
+            for name, parms in net.named_parameters():	
+                print('-->name:', name)
+                print('-->para:', parms)
+                print('-->grad_requirs:',parms.requires_grad)
+                print('-->grad_value:',parms.grad)
+                print("===")
             loss.backward()
+            print("=========================更新后=============================")
+            for name, parms in net.named_parameters():	
+                print('-->name:', name)
+                print('-->para:', parms)
+                print('-->grad_requirs:',parms.requires_grad)
+                print('-->grad_value:',parms.grad)
+                print("===")
             
             # print(f"\nloss_BN'grad:{loss_BN.grad}, loss_dis'grad {loss_dis.grad}, loss_div'grad :{loss_div.grad}")
             print(f"loss'grad:{loss.grad}")
             
             # backward,update parameter
             optimizer.step()
-
+            print("======迭代结束======")
             batch_loss = loss.item()
 
             training_loss += batch_loss
