@@ -81,9 +81,22 @@ class RA_Net(nn.Module):
             nn.Conv2d(output_channels, M, kernel_size=1),
             nn.Sigmoid()
         )
+        # self.diversity = nn.Sequential(
+        #     nn.Linear(output_channels, M),
+        #     nn.Sigmoid()
+        # )
         self.diversity = nn.Sequential(
-            nn.Linear(output_channels, M),
-            nn.Sigmoid()
+            nn.Linear(output_channels, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Linear(512, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Linear(128, 16),
+            nn.BatchNorm1d(16),
+            nn.ReLU(),
+            nn.Linear(16, 4),
+            nn.Softmax()
         )
         self.GAP = nn.AdaptiveAvgPool2d(1)
         self.classifer = nn.Sequential(
