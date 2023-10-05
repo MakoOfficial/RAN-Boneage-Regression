@@ -308,7 +308,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, l
             # k = torch.tensor([0, 1, 2, 3], dtype=image.dtype, device=image.device, requires_grad=True).repeat(batch_size, 1)
             k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
             loss_div = loss_fn_rec(P[0], k[:, 0]) + loss_fn_rec(P[1], k[:, 1]) + loss_fn_rec(P[2], k[:, 2]) + loss_fn_rec(P[3], k[:, 3])      # 10.4 before
-            print("\nP[1] is :"P[1])
+            print(f"\nP[1] is : {P[1]}")
             
             loss = alpha*loss_BN + beta*loss_dis + gamma*loss_div
             # loss = loss_BN + loss_dis

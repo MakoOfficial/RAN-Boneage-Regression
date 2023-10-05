@@ -77,8 +77,18 @@ class RA_Net(nn.Module):
         self.output_channels = output_channels
         self.M = M
         self.backbone = nn.Sequential(*backbone) # ResNet 50
+        # self.attention_generate_layer = nn.Sequential(
+        #     nn.Conv2d(output_channels, M, kernel_size=1),
+        #     nn.Sigmoid()
+        # )
         self.attention_generate_layer = nn.Sequential(
-            nn.Conv2d(output_channels, M, kernel_size=1),
+            nn.Conv2d(output_channels, 256, kernel_size=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.Conv2d(256, 16, kernel_size=1),
+            nn.BatchNorm2d(16),
+            nn.ReLU(),
+            nn.Conv2d(16, M, kernel_size=1), # M=4
             nn.Sigmoid()
         )
         # self.diversity = nn.Sequential(
