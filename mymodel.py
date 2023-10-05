@@ -111,8 +111,18 @@ class RA_Net(nn.Module):
         v2 = torch.squeeze(self.GAP(torch.unsqueeze(attn_map[:, 1], dim=1)*feature_map))
         v3 = torch.squeeze(self.GAP(torch.unsqueeze(attn_map[:, 2], dim=1)*feature_map))
         v4 = torch.squeeze(self.GAP(torch.unsqueeze(attn_map[:, 3], dim=1)*feature_map))
+
+        P1 = self.diversity(v1)
+        P2 = self.diversity(v2)
+        P3 = self.diversity(v3)
+        P4 = self.diversity(v4)
+
+        y1 = self.classifer(v1)
+        y2 = self.classifer(v2)
+        y3 = self.classifer(v3)
+        y4 = self.classifer(v4)
         
-        return self.classifer(x), [self.diversity(v1), self.diversity(v2), self.diversity(v3), self.diversity(v4)], [self.classifer(v1), self.classifer(v2), self.classifer(v3), self.classifer(v4)]
+        return self.classifer(x), [P1, P2, P3, P4], [y1, y2, y3, y4]
         # return y_hat, 0, v
 
     # 加入微调函数
