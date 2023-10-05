@@ -99,7 +99,7 @@ class RA_Net(nn.Module):
     # def forward(self, image, ifTest):
     def forward(self, image):
         x = self.backbone(image)
-        feature_map = x
+        feature_map = x.clone()
         
         x = self.GAP(x)
         x = torch.squeeze(x)
@@ -107,16 +107,19 @@ class RA_Net(nn.Module):
 
         attn_map = self.attention_generate_layer(feature_map)
         # P, v = self.RAm(feature_map)
+        # feature vectors
         v1 = torch.squeeze(self.GAP(torch.unsqueeze(attn_map[:, 0], dim=1)*feature_map))
         v2 = torch.squeeze(self.GAP(torch.unsqueeze(attn_map[:, 1], dim=1)*feature_map))
         v3 = torch.squeeze(self.GAP(torch.unsqueeze(attn_map[:, 2], dim=1)*feature_map))
         v4 = torch.squeeze(self.GAP(torch.unsqueeze(attn_map[:, 3], dim=1)*feature_map))
 
+        # cross-Entropy
         P1 = self.diversity(v1)
         P2 = self.diversity(v2)
         P3 = self.diversity(v3)
         P4 = self.diversity(v4)
 
+        # prediction
         y1 = self.classifer(v1)
         y2 = self.classifer(v2)
         y3 = self.classifer(v3)
