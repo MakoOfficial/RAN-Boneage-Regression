@@ -246,7 +246,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, l
 
 
     # loss_fn =  nn.MSELoss(reduction = 'sum')
-    loss_fn_rec = nn.CrossEntropyLoss(reduction="sum")
+    loss_fn_rec = nn.BCELoss(reduction="sum")
     loss_fn_reg = nn.L1Loss(reduction='sum')
 
     optimizer = torch.optim.Adam(net.parameters(), lr=lr, weight_decay=wd)
@@ -308,7 +308,7 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, l
             # k = torch.tensor([0, 1, 2, 3], dtype=image.dtype, device=image.device, requires_grad=True).repeat(batch_size, 1)
             k = torch.tensor([0, 1, 2, 3], device=image.device).repeat(batch_size, 1)
             loss_div = loss_fn_rec(P[0], k[:, 0]) + loss_fn_rec(P[1], k[:, 1]) + loss_fn_rec(P[2], k[:, 2]) + loss_fn_rec(P[3], k[:, 3])      # 10.4 before
-            print(f"\nP[1] is : {P[1]}")
+            # print(f"\nP[1] is : {P[1]}")
             
             loss = alpha*loss_BN + beta*loss_dis + gamma*loss_div
             # loss = loss_BN + loss_dis
@@ -321,15 +321,15 @@ def train_fn(net, train_dataset, valid_dataset, num_epochs, lr, wd, lr_period, l
             #         print('-->grad_requirs:',parms.requires_grad)
             #         print('-->grad_value:',parms.grad)
             loss.backward()
-            print("=========================更新后=============================")
-            for name, parms in net.named_parameters():
-                if name in module_name:
-                    print('-->name:', name)
-                    # print('-->para:', parms)
-                    print('-->grad_requirs:',parms.requires_grad)
-                    print('-->grad_value:',parms.grad)
+            # print("=========================更新后=============================")
+            # for name, parms in net.named_parameters():
+            #     if name in module_name:
+            #         print('-->name:', name)
+            #         # print('-->para:', parms)
+            #         print('-->grad_requirs:',parms.requires_grad)
+            #         print('-->grad_value:',parms.grad)
                     
-            print(f"\nloss_BN:{loss_BN.detach().item()/batch_size}, loss_dis'grad {loss_dis.detach().item()/(4*batch_size)}, loss_div'grad :{loss_div.detach().item()/batch_size}")
+            print(f"\nloss_BN:{loss_BN.detach().item()/batch_size}, loss_dis'grad {loss_dis.detach().item()/(4*batch_size)}, loss_div'grad :{loss_div.detach().item()/(4*batch_size)}")
             # print(f"\nloss_BN:{loss_BN.detach().item()/batch_size}, loss_dis'grad {loss_dis.detach().item()/(4*batch_size)}")
             
             # backward,update parameter

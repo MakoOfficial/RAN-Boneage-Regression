@@ -110,13 +110,13 @@ class RA_Net(nn.Module):
         )
         self.GAP = nn.AdaptiveAvgPool2d(1)
         self.classifer = nn.Sequential(
-            nn.Linear(output_channels, 1024),
-            nn.BatchNorm1d(1024),
-            nn.ReLU(),
-            nn.Linear(1024, 512),
+            nn.Linear(output_channels, 512),
             nn.BatchNorm1d(512),
             nn.ReLU(),
-            nn.Linear(512, 1)
+            nn.Linear(512, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Linear(128, 1)
         )
 
     # def forward(self, image, ifTest):
