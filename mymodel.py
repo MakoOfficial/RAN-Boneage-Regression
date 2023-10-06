@@ -77,37 +77,37 @@ class RA_Net(nn.Module):
         self.output_channels = output_channels
         self.M = M
         self.backbone = nn.Sequential(*backbone) # ResNet 50
-        # self.attention_generate_layer = nn.Sequential(
-        #     nn.Conv2d(output_channels, M, kernel_size=1),
-        #     nn.Sigmoid()
-        # )
         self.attention_generate_layer = nn.Sequential(
-            nn.Conv2d(output_channels, 256, kernel_size=1),
-            nn.BatchNorm2d(256),
-            nn.ReLU(),
-            nn.Conv2d(256, 16, kernel_size=1),
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-            nn.Conv2d(16, M, kernel_size=1), # M=4
+            nn.Conv2d(output_channels, M, kernel_size=1),
             nn.Sigmoid()
         )
-        # self.diversity = nn.Sequential(
-        #     nn.Linear(output_channels, M),
+        # self.attention_generate_layer = nn.Sequential(
+        #     nn.Conv2d(output_channels, 256, kernel_size=1),
+        #     nn.BatchNorm2d(256),
+        #     nn.ReLU(),
+        #     nn.Conv2d(256, 16, kernel_size=1),
+        #     nn.BatchNorm2d(16),
+        #     nn.ReLU(),
+        #     nn.Conv2d(16, M, kernel_size=1), # M=4
         #     nn.Sigmoid()
         # )
         self.diversity = nn.Sequential(
-            nn.Linear(output_channels, 512),
-            nn.BatchNorm1d(512),
-            nn.ReLU(),
-            nn.Linear(512, 128),
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
-            nn.Linear(128, 16),
-            nn.BatchNorm1d(16),
-            nn.ReLU(),
-            nn.Linear(16, 4),
+            nn.Linear(output_channels, M),
             nn.Softmax()
         )
+        # self.diversity = nn.Sequential(
+        #     nn.Linear(output_channels, 4),
+        #     nn.BatchNorm1d(4),
+        #     nn.ReLU(),
+        #     nn.Linear(512, 128),
+        #     nn.BatchNorm1d(128),
+        #     nn.ReLU(),
+        #     nn.Linear(128, 16),
+        #     nn.BatchNorm1d(16),
+        #     nn.ReLU(),
+        #     nn.Linear(16, 4),
+        #     nn.Softmax()
+        # )
         self.GAP = nn.AdaptiveAvgPool2d(1)
         self.classifer = nn.Sequential(
             nn.Linear(output_channels, 512),
