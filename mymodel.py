@@ -42,7 +42,7 @@ class RAm(nn.Module):
         # )
         self.diversity = nn.Sequential(
             nn.Linear(output_channels, M),
-            nn.Sigmoid()
+            nn.Softmax()
         )
         # self.GAP = nn.AdaptiveAvgPool2d(1)
 
